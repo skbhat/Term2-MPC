@@ -1,8 +1,72 @@
 # CarND-Controls-MPC
-Self-Driving Car Engineer Nanodegree Program
+
+MPC differs from PID in two ways:
+
+1. In PID project we did not have the future trajectory of the path
+2. In PID project we did not use model for vehicle dynamics
+
+With the above two additions we can compute the control parameters by predicting the vehicle position in future.  The overall framework is as folows:
+
+1. Fit a 3rd degree polynomial to the provided points in the trajectory ahead.
+2. Use the polynomial to compute cross track error and orientation error
+3. Starting from the present state of the vehicle, predict the furture error as a function of cotrol parameters
+4. Compute the actual values for control parameters by minimizing the error.
+
+Following set of equations are used for predicting vehicle state:
+<p align="center">
+  <img src="./images/eqn1.jpg" alt="car_img">
+</p>
+
+In step(3), we have to take care of the latency.  We have to start our computation from the state in which vehicle will be after latency.  According to my understanding the future position and cross track error must be compute as follows:
+
+double lt_x = v*latency*cos(A);
+double lt_y = v*latency*sin(A);
+double lt_cte = cte + v*sin(A)*latency;
+
+where A is the difference between current orientation of the vehicle and the orientation of the trajectory. But in practice it did not work as well as the equations used in [this](https://github.com/awbrown90/CarND-MPC-Project).  Hence I used those equations (while being unclear about why it should work better).
+
+## Tuning cost functions and parameters
+
+Essentially, I tried to maximize the overlap between the Yellow and Green lines shown while running the simulator.  Yellow line shows the reference trajectory and Green line shows the predicted vehicle trajectory.  We have to tune the parameters at following lines.
+
+
+size_t N = 10;
+double dt = 0.1;
+double ref_v = 60;
+
+// Minimize cross track error and try to maintain a reference speed.
+for (unsigned int t = 0; t < N; t++) {
+      fg[0] += 5000*CppAD::pow(vars[cte_start + t], 2);
+      fg[0] += 5000*CppAD::pow(vars[epsi_start + t], 2);
+      fg[0] += CppAD::pow(vars[v_start + t] - ref_v, 2);
+}
+
+// Minimize the use of actuators.
+	for (unsigned int t = 0; t < N - 1; t++) {
+	fg[0] += 5*CppAD::pow(vars[delta_start + t], 2);
+	fg[0] += 5*CppAD::pow(vars[a_start + t], 2);
+}
+
+// Minimize the value gap between sequential actuations.
+for (unsigned int t = 0; t < N - 2; t++) {
+	fg[0] += 50*CppAD::pow(vars[delta_start + t + 1] - vars[delta_start + t], 2);
+	fg[0] += 50*CppAD::pow(vars[a_start + t + 1] - vars[a_start + t], 2);
+}
 
 ---
 
+I iterated through the following steps 
+
+1. If there is any misfit at the beginning of the trajectory then increase the weight of Cross Track Error component.
+2. If there is any misfit at the sharp corners, then decrease dt
+3. If the length of the predicted trajectory is less then increase N (vice-versa)
+4. If the vehicle is moving comfortably, then increase reference velocity ref_v
+
+The vehicle passes the test even with ref_v = 100.  But I kept it at 60 because in the past it failed the test in the reviewer's simulator.
+
+---
+
+# Original Readme
 ## Dependencies
 
 * cmake >= 3.5

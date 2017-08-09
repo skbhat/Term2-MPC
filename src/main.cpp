@@ -119,11 +119,8 @@ int main() {
           double epsi = -atan(coeffs[1]);
 
           /*
-           * Handling latency.  After several trials I used the code of https://github.com/awbrown90/CarND-MPC-Project
-           * Yet there are some portion which I do not understand.
-           * How throttle_value can be used as acceleration?
-           * How lt_y remains 0. Should'nt it depend upon current steer value?
-           * But somehow it seems to work
+           * Handling latency.  I referred to https://github.com/awbrown90/CarND-MPC-Project
+           * whose latency model works better than what I obtained from my attempts
            */
           double Lf = 2.67;
           double latency = 0.1; //###Warning set this to 0.1 at the end
@@ -201,7 +198,7 @@ int main() {
           //
           // NOTE: REMEMBER TO SET THIS TO 100 MILLISECONDS BEFORE
           // SUBMITTING.
-          this_thread::sleep_for(chrono::milliseconds(int(latency*1000)));
+          this_thread::sleep_for(chrono::milliseconds(100));
           ws.send(msg.data(), msg.length(), uWS::OpCode::TEXT);
         }
       } else {
