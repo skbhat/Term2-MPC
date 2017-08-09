@@ -1,5 +1,9 @@
 # CarND-Controls-MPC
 
+<p align="center">
+  <img src="./images/rep_im.jpg" alt="car_img">
+</p>
+
 MPC differs from PID in two ways:
 
 1. In PID project we did not have the future trajectory of the path
@@ -8,7 +12,7 @@ MPC differs from PID in two ways:
 With the above two additions we can compute the control parameters by predicting the vehicle position in future.  The overall framework is as folows:
 
 1. Fit a 3rd degree polynomial to the provided points in the trajectory ahead.
-2. Use the polynomial to compute cross track error and orientation error
+2. Use the polynomial to compute cross track error and orientation error of the present state
 3. Starting from the present state of the vehicle, predict the furture error as a function of cotrol parameters
 4. Compute the actual values for control parameters by minimizing the error.
 
@@ -20,7 +24,9 @@ Following set of equations are used for predicting vehicle state:
 In step(3), we have to take care of the latency.  We have to start our computation from the state in which vehicle will be after latency.  According to my understanding the future position and cross track error must be compute as follows:
 
 double lt_x = v*latency*cos(A);
+
 double lt_y = v*latency*sin(A);
+
 double lt_cte = cte + v*sin(A)*latency;
 
 where A is the difference between current orientation of the vehicle and the orientation of the trajectory. But in practice it did not work as well as the equations used in [this](https://github.com/awbrown90/CarND-MPC-Project).  Hence I used those equations (while being unclear about why it should work better).
