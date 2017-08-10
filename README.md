@@ -31,9 +31,9 @@ double lt_cte = cte + v*sin(A)*latency;
 
 where A is the difference between current orientation of the vehicle and the orientation of the trajectory. But in practice it did not work as well as the equations used in [this](https://github.com/awbrown90/CarND-MPC-Project).  Hence I used those equations (while being unclear about why it should work better).
 
-## Tuning cost functions and parameters
+## Final values of parameters and weight of cost functions
 
-Essentially, I tried to maximize the overlap between the Yellow and Green lines shown while running the simulator.  Yellow line shows the reference trajectory and Green line shows the predicted vehicle trajectory.  We have to tune the parameters at following lines.
+Final values are as follows:
 
 ```c++
 size_t N = 10;
@@ -60,8 +60,8 @@ for (unsigned int t = 0; t < N - 2; t++) {
 }
 
 ```
-
-I iterated through the following steps 
+## How I arrived at these values
+I try to obtain a sufficently long predicted path (green curve shown in the simulator) which aligns well with the actual path.  A 'misfit' occurs when the predicted path deviates from the actual path.  Ideally, it is better to have dt as small as possible.  But when dt becomes smaller the time horizon (N*dt) becomes smaller and the foresight we have reduces.  In order to increase the time horizon, if we increase N, then it adds computational cost and may not execute the controls within the given time.  Moreover, since there is a latency of 0.1s, any dt<0.1 will lead to predictions which do not take into account the effect of previous actuation.  Hence I experimented with dt values in range 0.1 to 0.2.  For a fixed value of dt, I iterated through the following steps.
 
 1. If there is any misfit at the beginning of the trajectory then increase the weight of Cross Track Error component.
 2. If there is any misfit at the sharp corners, then decrease dt
